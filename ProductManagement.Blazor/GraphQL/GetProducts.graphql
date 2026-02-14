@@ -3,5 +3,6 @@
     id
     name
     price
+    createdAt
   }
 }

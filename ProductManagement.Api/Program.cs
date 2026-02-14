@@ -1,19 +1,36 @@
 using Microsoft.EntityFrameworkCore;
 using ProductManagement.Api.GraphQL.Mutations;
 using ProductManagement.Api.GraphQL.Queries;
+using ProductManagement.Application.Services;
 using ProductManagement.Infrastructure.Persistence;
+using ProductManagement.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("BlazorPolicy", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+
 builder.Services.AddDbContext<AppDbContext>(option => option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<ProductQuery>()
-    .AddMutationType<ProductMutation>();
+    .AddMutationType<ProductMutation>()
+    ;
+
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
 
 var app = builder.Build();
 
@@ -25,13 +42,15 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseCors("BlazorPolicy");
 
 app.UseRouting();
 
 app.UseAuthorization();
-
+app.MapGraphQL();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

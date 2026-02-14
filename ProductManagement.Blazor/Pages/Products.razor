@@ -1,5 +1,198 @@
-﻿<h3>Products</h3>
+﻿@page "/products"
+@inject IProductClient ProductClient
+
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Product Management</h3>
+        <button @onclick="LoadProducts" class="btn btn-outline-secondary btn-sm d-flex align-items-center">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh List
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger d-flex align-items-center" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div>@_errorMessage</div>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-0">
+            @if (_products == null)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Fetching products...</p>
+                </div>
+            }
+            else if (!_products.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                    <p class="mt-2 text-muted">No products found. Start by adding one!</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                @* <th class="ps-4">ID</th> *@
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Created At</th>
+                                @* <th class="text-end pe-4">Actions</th> *@
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in _products)
+                            {
+                                <tr>
+                                    @* <td class="ps-4 text-muted small">@p.Id.ToString().Substring(0, 8)...</td> *@
+                                    <td class="fw-bold">@p.Name</td>
+                                    <td>
+                                        <span class="badge bg-success-soft text-success">
+                                            @p.Price.ToString("C")
+                                        </span>
+                                    </td>
+                                    <td class="text-muted">@p.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                    @* <td class="text-end pe-4">
+                                        <button class="btn btn-sm btn-outline-primary me-2 disabled">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger disabled">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td> *@
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0">Add New Product</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Product Name</label>
+                    <input @bind="_newName" placeholder="e.g. Gaming Mouse" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Price</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input @bind="_newPrice" type="number" step="0.01" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button @onclick="AddProduct" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg me-1"></i> Add
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-success-soft {
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.02);
+    }
+    .card {
+        border-radius: 0.75rem;
+    }
+    .card-header:first-child {
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+</style>
 
 @code {
+    private IReadOnlyList<IGetProducts_Products>? _products;
+    private string _newName = "";
+    private decimal _newPrice;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    private async Task LoadProducts()
+    {
+        try
+        {
+            Console.WriteLine("Fetching products from server...");
+            var result = await ProductClient.GetProducts.ExecuteAsync();
+            
+            if (result.Errors.Any())
+            {
+                _errorMessage = "GraphQL Errors: " + string.Join(", ", result.Errors.Select(e => e.Message));
+                Console.WriteLine(_errorMessage);
+            }
+            else
+            {
+                _products = result.Data?.Products;
+                Console.WriteLine($"Successfully loaded {_products?.Count ?? 0} products.");
+                _errorMessage = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Failed to load products: " + ex.Message;
+            Console.WriteLine(_errorMessage);
+        }
+        StateHasChanged();
+    }
+
+    private async Task AddProduct()
+    {
+        if (string.IsNullOrWhiteSpace(_newName) || _newPrice <= 0)
+        {
+            _errorMessage = "Please enter a valid name and price.";
+            return;
+        }
+
+        try
+        {
+            _errorMessage = null;
+            Console.WriteLine($"Attempting to add product: '{_newName}' at price {_newPrice}");
+            
+            var addResult = await ProductClient.AddProduct.ExecuteAsync(_newName, _newPrice);
+
+            if (addResult.Errors.Any())
+            {
+                _errorMessage = "Failed to add: " + string.Join(", ", addResult.Errors.Select(e => e.Message));
+                Console.WriteLine(_errorMessage);
+                return;
+            }
+
+            Console.WriteLine("Product added successfully. Refreshing list...");
+
+            _newName = "";
+            _newPrice = 0;
+
+            await LoadProducts();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "An error occurred while adding the product: " + ex.Message;
+            Console.WriteLine(_errorMessage);
+        }
+    }
 
 }
+

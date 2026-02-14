@@ -10,14 +10,25 @@ namespace ProductManagement.Api.GraphQL.Mutations
             decimal price,
             [Service] IProductRepository repository)
         {
-            var product = new Product
+            try
             {
-                Id = Guid.NewGuid(),
-                Name = name,
-                Price = price
-            };
+                var product = new Product
+                {
+                    Id = Guid.NewGuid(),
+                    Name = name,
+                    Price = price,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            return await repository.AddAsync(product);
+                return await repository.AddAsync(product);
+            }
+            catch (Exception ex)
+            {
+                throw new GraphQLException(new ErrorBuilder()
+                    .SetMessage($"Failed to add product: {ex.Message}")
+                    .SetExtension("details", ex.ToString())
+                    .Build());
+            }
         }
     }
 }

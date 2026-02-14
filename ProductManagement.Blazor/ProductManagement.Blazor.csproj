@@ -9,8 +9,18 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.12" PrivateAssets="all" />
-    <PackageReference Include="StrawberryShake.CodeGeneration.CSharp" Version="12.22.6" />
+    <PackageReference Include="StrawberryShake.Blazor" Version="15.1.12" />
     <PackageReference Include="StrawberryShake.Transport.Http" Version="15.1.12" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <GraphQLRazorComponents>enable</GraphQLRazorComponents>
+  </PropertyGroup>
+
+  <!-- Override StrawberryShake generation to avoid crash with .NET 9 tools -->
+  <Target Name="_GenerateGraphQLCode" DependsOnTargets="_GraphQLCodeGenerationRoot" Condition="'@(GraphQL)' != ''">
+    <MakeDir Directories="$(GraphQLCodeGenerationRoot)" Condition="!EXISTS('$(GraphQLCodeGenerationRoot)\.build.info')" />
+    <Touch Files="$(GraphQLCodeGenerationRoot)\.build.info" AlwaysCreate="true" />
+  </Target>
 
 </Project>
