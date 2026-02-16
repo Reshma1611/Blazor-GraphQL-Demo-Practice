@@ -1,4 +1,4 @@
-﻿using HotChocolate;
+using HotChocolate;
 using HotChocolate.Types;
 using ProductManagement.Application.Services;
 using ProductManagement.Domain.Entities;
@@ -6,10 +6,10 @@ using ProductManagement.Domain.Entities;
 namespace ProductManagement.Api.GraphQL.Queries
 {
     [ExtendObjectType("Query")]
-    public class ProductQuery
+    public class DepartmentQuery
     {
-        public async Task<List<Product>> GetProducts(
-            [Service] IProductRepository repository)
+        public async Task<List<Department>> GetDepartments(
+            [Service] IDepartmentRepository repository)
         {
             return await repository.GetAllAsync();
         }

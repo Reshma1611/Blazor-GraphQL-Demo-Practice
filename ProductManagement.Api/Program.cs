@@ -25,11 +25,15 @@ builder.Services.AddDbContext<AppDbContext>(option => option.UseSqlServer(builde
 
 builder.Services
     .AddGraphQLServer()
-    .AddQueryType<ProductQuery>()
-    .AddMutationType<ProductMutation>()
-    ;
+    .AddQueryType(d => d.Name("Query"))
+    .AddTypeExtension<ProductQuery>()
+    .AddTypeExtension<DepartmentQuery>()
+    .AddMutationType(d => d.Name("Mutation"))
+    .AddTypeExtension<ProductMutation>()
+    .AddTypeExtension<DepartmentMutation>();
 
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 
 
 var app = builder.Build();

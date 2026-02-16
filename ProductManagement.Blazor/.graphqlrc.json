@@ -4,7 +4,7 @@
   "extensions": {
     "strawberryShake": {
       "name": "ProductClient",
-      "url": "http://localhost:5259/graphql",
+      "url": "http://localhost:5137/graphql",
       "records": {
         "inputs": false,
         "entities": false

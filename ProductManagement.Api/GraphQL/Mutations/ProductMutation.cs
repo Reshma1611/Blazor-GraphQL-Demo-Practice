@@ -1,8 +1,11 @@
-﻿using ProductManagement.Application.Services;
+﻿using HotChocolate;
+using HotChocolate.Types;
+using ProductManagement.Application.Services;
 using ProductManagement.Domain.Entities;
 
 namespace ProductManagement.Api.GraphQL.Mutations
 {
+    [ExtendObjectType("Mutation")]
     public class ProductMutation
     {
         public async Task<Product> AddProduct(

@@ -12,5 +12,6 @@ namespace ProductManagement.Infrastructure.Persistence
         }
 
         public DbSet<Product> Products { get; set; }
+        public DbSet<Department> Departments { get; set; }
     }
 }

@@ -1,0 +1,7 @@
+mutation AddDepartment($name: String!, $location: String!) {
+  addDepartment(name: $name, location: $location) {
+    id
+    name
+    location
+  }
+}
